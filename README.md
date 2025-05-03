@@ -1,40 +1,55 @@
-<<<<<<< HEAD
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Radar Moto – Editor de Mapas
 
-## Getting Started
+Um editor interativo de mapas construído em React + TypeScript, que utiliza **React Konva** para renderização Canvas, permitindo criar áreas geométricas, polígonos livres e “corredores” sobre um fundo em grade.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📦 Tecnologias & Bibliotecas
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **React** e **TypeScript**  
+- **Next.js** (`"use client"`) — Para SSR/SSG e rotas de app  
+- **react-konva** — Renderização de canvas e manipulação dos shapes  
+- **Konva** — Biblioteca de baixo-nível para Canvas abstraída por react-konva  
+- **uuid** — Geração de IDs únicos para shapes  
+- **Custom Hooks**  
+  - `useSnapToGrid` — snap à grade e anchors de outros objetos  
+  - `useHistory` — undo/redo de ações (Ctrl+Z / Ctrl+Y + botões)  
+  - `usePanZoom` — zoom (roda do mouse) e pan (botão direito)  
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ⚙️ Funcionalidades
 
-## Learn More
+1. **Criação de Shapes**  
+   - **Retângulos**: clique em “Área Geométrica” e depois num ponto do canvas.  
+   - **Polígonos livres**: modo “Área Livre”, clique em cada vértice, depois “Finalizar” ou tecla `Enter`.  
+   - **Corredores**: modo “Corredor Livre” ou “Corredor Reto”, idem ao polígono.
 
-To learn more about Next.js, take a look at the following resources:
+2. **Transformações**  
+   - **Mover**: arraste qualquer shape ou texto.  
+   - **Redimensionar**: alças do `Transformer` em retângulos.  
+   - **Editar propriedades** no painel lateral (nome, largura, altura, cor).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Snap & Grade**  
+   - Grade de fundo (configurável).  
+   - Snap a linhas de grade e âncoras de outros shapes para alinhamento preciso.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Pan & Zoom**  
+   - *Pan*: arraste com o botão direito do mouse.  
+   - *Zoom*: roda do mouse (scale centrado no cursor).
 
-## Deploy on Vercel
+5. **Undo / Redo**  
+   - **Ctrl+Z / Ctrl+Y** ou botões na toolbar para desfazer/refazer alterações.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+6. **Painel Lateral**  
+   - Exibe propriedades do shape ou corredor selecionado.  
+   - Permite alterar nome, dimensões (em metros) e cor.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-=======
-# EditorMapas
->>>>>>> 4ff304f8237b82d39f892820a0a5d4aea4806afd
+---
+
+## 🚀 Como usar
+
+1. **Clone o repositório**  
+   ```bash
+   git clone https://github.com/joao1015/EditorMapas.git
+   cd EditorMapas
