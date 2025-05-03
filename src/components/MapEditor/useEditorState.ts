@@ -6,6 +6,7 @@ import { Shape, FreePath, Point, Mode, HistoryState } from "./shapes";
 import { snapToGrid, calculateLength } from "./mapUtils";
 
 export function useEditorState() {
+  // Dimensões da área
   const [areaWidth, setAreaWidth] = useState(40);
   const [areaHeight, setAreaHeight] = useState(25);
   const areaTotal = areaWidth * areaHeight;
@@ -13,6 +14,7 @@ export function useEditorState() {
     (window.innerWidth * window.innerHeight) / Math.max(1, areaTotal)
   );
 
+  // Estados de desenho
   const [useSnap, setUseSnap] = useState(true);
   const [shapes, setShapes] = useState<Shape[]>([]);
   const [paths, setPaths] = useState<FreePath[]>([]);
@@ -20,39 +22,51 @@ export function useEditorState() {
   const [currentPath, setCurrentPath] = useState<Point[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const [history, setHistory] = useState<HistoryState[]>([{
-    shapes: [],
-    paths: [],
-    areaWidth: 40,
-    areaHeight: 25,
-  }]);
+  // Histórico para undo/redo
+  const [history, setHistory] = useState<HistoryState[]>([
+    { shapes: [], paths: [], areaWidth: 40, areaHeight: 25 },
+  ]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const historyRef = useRef(history);
   const currentIndexRef = useRef(currentIndex);
   const isUndoRedo = useRef(false);
 
+  // Zoom, pan e viewport
   const [scale, setScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-
-  const stageRef = useRef<any>(null);
-  const trRef = useRef<any>(null);
-
   const [viewport, setViewport] = useState({
     x: 0,
     y: 0,
     scale,
-    stageSize: {
-      w: window.innerWidth * 0.75,
-      h: window.innerHeight * 0.8,
-    },
+    stageSize: { w: window.innerWidth * 0.75, h: window.innerHeight * 0.8 },
   });
 
+  // References para Konva
+  const stageRef = useRef<any>(null);
+  const trRef = useRef<any>(null);
+
+  // Muda o modo de desenho
   function activateMode(m: Mode) {
     setMode(m);
     setCurrentPath([]);
   }
 
+  // Funções de zoom e reset de visualização
+  function zoomByFactor(factor: number) {
+    setScale((s) => {
+      const newScale = s * factor;
+      setViewport((vp) => ({ ...vp, scale: newScale }));
+      return newScale;
+    });
+  }
+  function resetView() {
+    setScale(1);
+    setStagePos({ x: 0, y: 0 });
+    setViewport((vp) => ({ x: 0, y: 0, scale: 1, stageSize: vp.stageSize }));
+  }
+
+  // Import/Export JSON
   function handleExportJSON() {
     const data = JSON.stringify({ areaWidth, areaHeight, shapes, paths }, null, 2);
     const blob = new Blob([data], { type: "application/json" });
@@ -63,7 +77,6 @@ export function useEditorState() {
     a.click();
     URL.revokeObjectURL(url);
   }
-
   function handleImportJSON(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -82,25 +95,16 @@ export function useEditorState() {
     reader.readAsText(file);
   }
 
+  // Clique no stage para iniciar formas
   function handleStageClick() {
     if (isPanning) return;
     const pos = stageRef.current?.getPointerPosition();
     if (!pos) return;
     const { x, y } = snapToGrid(pos.x, pos.y, useSnap);
-
     if (mode === "rect") {
       setShapes((prev) => [
         ...prev,
-        {
-          id: uuidv4(),
-          type: "rect",
-          name: `Área ${prev.length + 1}`,
-          x,
-          y,
-          width: 100,
-          height: 60,
-          nameOffset: { x: 10, y: -20 },
-        },
+        { id: uuidv4(), type: "rect", name: `Área ${prev.length + 1}`, x, y, width: 100, height: 60, nameOffset: { x: 10, y: -20 } },
       ]);
       setMode("none");
     } else if (["polygon", "path", "line"].includes(mode)) {
@@ -108,6 +112,7 @@ export function useEditorState() {
     }
   }
 
+  // Finaliza desenho de polígono ou path
   function finishDrawing() {
     if (currentPath.length < 2) {
       setMode("none");
@@ -117,43 +122,26 @@ export function useEditorState() {
     if (mode === "polygon") {
       setShapes((prev) => [
         ...prev,
-        {
-          id: uuidv4(),
-          type: "polygon",
-          name: `Área ${prev.length + 1}`,
-          x: 0,
-          y: 0,
-          points: currentPath,
-          nameOffset: { x: 10, y: -20 },
-        },
+        { id: uuidv4(), type: "polygon", name: `Área ${prev.length + 1}`, x: 0, y: 0, points: currentPath, nameOffset: { x: 10, y: -20 } },
       ]);
     } else {
       setPaths((prev) => [
         ...prev,
-        {
-          id: uuidv4(),
-          name: `Corredor ${prev.length + 1}`,
-          width: pixelsPerMeter * 0.5,
-          color: "#4f46e5",
-          points: currentPath,
-          nameOffset: { x: 10, y: -20 },
-        },
+        { id: uuidv4(), name: `Corredor ${prev.length + 1}`, width: pixelsPerMeter * 0.5, color: "#4f46e5", points: currentPath, nameOffset: { x: 10, y: -20 } },
       ]);
     }
     setCurrentPath([]);
     setMode("none");
   }
 
+  // Atualiza ponto de path
   function updatePathPoint(id: string, index: number, p: Point) {
     setPaths((prev) =>
-      prev.map((pl) =>
-        pl.id === id
-          ? { ...pl, points: pl.points.map((pt, i) => (i === index ? p : pt)) }
-          : pl
-      )
+      prev.map((pl) => (pl.id === id ? { ...pl, points: pl.points.map((pt, i) => (i === index ? p : pt)) } : pl))
     );
   }
 
+  // Sync transformer on selection
   useEffect(() => {
     const tr = trRef.current;
     const stage = stageRef.current;
@@ -164,6 +152,7 @@ export function useEditorState() {
     }
   }, [selectedId, shapes, paths]);
 
+  // Keyboard handlers (incluindo undo/redo)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target !== document.body) return;
@@ -207,6 +196,23 @@ export function useEditorState() {
     return () => window.removeEventListener("keydown", handler);
   }, [selectedId, mode, currentPath, currentIndex, history]);
 
+  // Efeito de histórico para undo/redo
+  useEffect(() => {
+    if (isUndoRedo.current) {
+      isUndoRedo.current = false;
+      return;
+    }
+    // corta futuro
+    const past = historyRef.current.slice(0, currentIndexRef.current + 1);
+    const nextState = { shapes, paths, areaWidth, areaHeight };
+    const newHist = [...past, nextState];
+    historyRef.current = newHist;
+    setHistory(newHist);
+    const ni = newHist.length - 1;
+    currentIndexRef.current = ni;
+    setCurrentIndex(ni);
+  }, [shapes, paths, areaWidth, areaHeight]);
+
   return {
     areaWidth,
     setAreaWidth,
@@ -234,6 +240,8 @@ export function useEditorState() {
     updatePathPoint,
     scale,
     setScale,
+    zoomByFactor,
+    resetView,
     stagePos,
     setStagePos,
     isPanning,
